@@ -147,30 +147,64 @@ int main(){
    ```
    $ gcc -E hello.c > hello-e.c
    ```
-   .file "yes.c"
+   
+   と入力すると、`hello.c`のソースファイルから、`hello.s`というファイルが生成さ
+
+1. `ccl`：コンパイラ本体。
+   - プリプロセッサ処理ではコンパイル対象のC言語ソースコードをすべて揃えてからコンパイル本体に渡す。コンパイラ本体は、プリプロセッサから渡されたソースコードをアセンブラに変換する。
+
+   1. 単語解析：コンパイラでは、最初にソースコードを読み込んで、単語解析を行う。単語解析では、読み込んだソースコードを解析して、プログラム記述の基本要素(**トークン**)に分割される。
+   1. 構文解析：プログラムがトークンに分割されると、コンパイラは文の構造を認識するための処理を行う。
+   1. 意味解析：構文解析->意味解析の手順を繰り返しながら実行される。
+   1. コード最適化
+     - CPUに依存しない最適化：1つのプログラムで2回以上繰り返すような処理が出てきた場合は、2回目以降の文を省略し、すべての最初の文を参照するようにする
+     - CPUに依存する最適化：CPUよりレジスタの数が異なる場合の対応や、そのCPUのアセンブリ言語特製に依存するように処理内容を変更するなど
+   1. アセンブリコードの生成：オブジェクトコードの生成。
+     ```
+     $ gcc -S hello.c [Enter]
+     ```
+     と入力すると、`hello.c`のソースファイルから`hello.s`というファイルが生成され、その内容が以下のようになる。
+   
+     ```s
+     .file "yes.c"
    	 .section .rodata
-   .LC0:
+     .LC0:
 	 .string "Hello, World!"
 	 .text 
-   .globl main
-   	  .type main, @function 
-   main:
-	leal 4(%esp), %ecx
-	andl $-16, %esp
-	pushl -4(%ecx)
-	pushl %ebp
-	movl %esp, %ebp
-	pushl %ecx
-	subl $4, %esp 
-	movl $.LC0, (%esp) 
-	call puts
-	addl $4, %esp
-	popl %ecx
-	popl %ebp
-	leal -4(%ecx), %esp
-	ret
-	.size main, .-main
-	.ident "GCC: (GNU) 4.1.0 20060304 (Red Hat 4.1.0-3)" 
-	.section .note.GNU-stack,"",@
-   ```
- 1. 
+	 .globl main
+   	 .type main, @function 
+     main:
+	 leal 4(%esp), %ecx
+	 andl $-16, %esp
+	 pushl -4(%ecx)
+	 pushl %ebp
+	 movl %esp, %ebp
+	 pushl %ecx
+	 subl $4, %esp 
+	 movl $.LC0, (%esp) 
+	 call puts
+	 addl $4, %esp
+	 popl %ecx
+	 popl %ebp
+	 leal -4(%ecx), %esp
+	 ret
+	 .size main, .-main
+	 .ident "GCC: (GNU) 4.1.0 20060304 (Red Hat 4.1.0-3)" 
+	 .section .note.GNU-stack,"",@
+     ```
+ 1. アセンブラ。コンパイラ本体処理で生成されたアセンブリ命令のソースコードをアセンブルし、該当CPUのマシンコードを含んだバイナリファイルを出力する。
+    ```
+    gcc -c hello.c [Enter]
+    ```
+    の入力で、リロケータブルオブジェクトファイル(`hello.o`)が出力される。  
+
+    このファイルはマシンコードのバイナリファイルであるため、通常のエディタでは、意味のある表示ができない。
+    ```
+    objdump -d hello.o > hello-r
+    ```
+1. リンカ：アセンブラが出力したリロケータブルオブジェクトファイルを`libc`や他の必要なライブラリおよびCランタイムルーチンとリンクとして、実行可能なバイナリファイルの形式にして出力
+
+
+## BASIC
+### 非構造化言語と構造化言語の中間言語
+- 
